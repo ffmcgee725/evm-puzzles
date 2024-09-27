@@ -87,9 +87,45 @@ If we convert 2 byte hex number `0100` to a decimal, we get `256`, and if we squ
 Value --> `16`
 
 ### Puzzle 6
+[CALLDATALOAD](https://www.evm.codes/#36) opcode loads calldata from a specified byte. In this puzzle, it reads calldata starting from byte 0 and pushes 32 bytes onto the stack.
+
+We then encounter a JUMP instruction that needs to alter the program counter to `0x0A`.
+
+The calldata provided should allow the JUMP to work. One may think `0x0A` is the right input, but calldata must be padded to 32 bytes.
+
+Value --> `0x000000000000000000000000000000000000000000000000000000000000000A`
 
 ### Puzzle 7
 
+[CALLDATACOPY](https://www.evm.codes/#37) opcode copies calldata to memory,
+
+[CREATE](https://www.evm.codes/#f0) opcode deploys a contract.
+
+[EXTCODESIZE](https://www.evm.codes/#3b) opcode expects an address on the top of the stack and returns the size of the code at that address.
+
+The contract must be deployed with 1 byte of code so that [EXTCODESIZE] can return a value of `1`, fulfilling the condition for the jump.
+
+Value --> `0x60016000526001601ff3` (this could be any sequence that returns 1 byte)
+
 ### Puzzle 8
 
+This puzzle is similar to puzzle 7, but now it involves using the [CALL] instruction to invoke another contract after deploying one.
+
+The puzzle requires you to provide [CALLDATA] that, when deployed, causes the [CALL] to fail, so that the [EQ] check can pass with a result of `0`.
+
+To make the CALL fail, we deploy a contract with bytecode that has no stack values when executed (causing a [REVERT]).
+
+The bytecode `0x60016000526001601FF3` will deploy a contract whose code is `01` (an [ADD] instruction). Since there are no values to ADD, the [CALL] fails, solving the puzzle.
+
+Value --> `0x60016000526001601FF3` (this could be any sequence that has no stack values when executed, consequently causing a [REVERT])
+
 ### Puzzle 9
+
+In this puzzle, both [CALLDATA] and [CALLVALUE] are used. 
+
+The [CALLDATASIZE] must be greater than `3`, and the product of [CALLDATASIZE] * [CALLVALUE] must equal `08`.
+
+[CALLDATA] --> `0x00000001` (which has 4 bytes)
+[CALLVALUE] --> `2`
+
+This satisfies both conditions: [CALLDATASIZE] is greater than `3`, and `4 * 2 = 8`, completing the puzzle!
